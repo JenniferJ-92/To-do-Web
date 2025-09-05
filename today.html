@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Task Hero - Your Productivity Companion</title>
+<style>
+    /* Global styles */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        background: #BF92E4;
+        color: #333;
+    }
+
+    h1, h2 {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+
+    nav {
+        display: flex;
+        justify-content: center;
+        background: #7D5BA6;
+        padding: 15px;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+    }
+
+    nav button {
+        background: #D9B3FF;
+        border: none;
+        margin: 0 10px;
+        padding: 10px 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+
+    nav button:hover {
+        background: #C18DE0;
+        color: white;
+    }
+
+    section {
+        padding: 30px 20px;
+        min-height: 80vh;
+        border-radius: 15px;
+        margin: 20px auto;
+        max-width: 800px;
+        background: rgba(255,255,255,0.9);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    }
+
+    .task-inputs input, .task-inputs select, .task-inputs button {
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        border-radius: 8px;
+        border: 1px solid #999;
+    }
+
+    ul {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    li {
+        padding: 12px;
+        margin: 5px 0;
+        background: #E0C3FC;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-radius: 8px;
+    }
+
+    li.completed {
+        text-decoration: line-through;
+        opacity: 0.6;
+    }
+
+    .actions button {
+        margin-left: 5px;
+        border: none;
+        padding: 6px 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #7D5BA6;
+        color: white;
+        transition: 0.3s;
+    }
+
+    .actions button:hover {
+        background: #5E3D91;
+    }
+
+    /* Statistics styles */
+    .stats {
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+
+    .stat-card {
+        background: #D9B3FF;
+        padding: 20px;
+        border-radius: 15px;
+        margin: 10px;
+        flex: 1 1 200px;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+</style>
+</head>
+<body>
+
+<nav>
+    <button onclick="showSection('home')">Home</button>
+    <button onclick="showSection('manage')">Manage Lists</button>
+    <button onclick="showSection('stats')">Statistics</button>
+</nav>
+
+<!-- Home Section -->
+<section id="home">
+    <h1>Welcome to Task To-Do!</h1>
+    <p style="text-align:center; font-size:18px;">Stay motivated, stay productive!</p>
+
+    <div class="task-inputs">
+        <input type="text" id="taskName" placeholder="Enter task name">
+        <input type="date" id="taskDate">
+        <input type="time" id="taskTime">
+        <select id="taskList">
+            <option value="General">General</option>
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+        </select>
+        <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <h2>My Tasks</h2>
+    <ul id="tasksList"></ul>
+</section>
+
+<!-- Manage Lists Section -->
+<section id="manage" style="display:none;">
+    <h1>Manage Lists</h1>
+    <input type="text" id="newListName" placeholder="Enter new list name">
+    <button onclick="addNewList()">Add List</button>
+
+    <h2>Existing Lists</h2>
+    <ul id="listContainer"></ul>
+</section>
+
+<!-- Statistics Section -->
+<section id="stats" style="display:none;">
+    <h1>Statistics</h1>
+    <div class="stats">
+        <div class="stat-card">
+            <h2 id="totalTasks">0</h2>
+            <p>Total Tasks</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="completedTasks">0</h2>
+            <p>Completed Tasks</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="onTimeTasks">0</h2>
+            <p>On-Time Tasks</p>
+        </div>
+    </div>
+</section>
+
+<script>
+let tasks = [];
+let lists = ['General','Work','Personal'];
+
+function showSection(section) {
+    document.getElementById('home').style.display = 'none';
+    document.getElementById('manage').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById(section).style.display = 'block';
+    if(section === 'stats') updateStats();
+}
+
+function addTask() {
+    const name = document.getElementById('taskName').value;
+    const date = document.getElementById('taskDate').value;
+    const time = document.getElementById('taskTime').value;
+    const list = document.getElementById('taskList').value;
+
+    if (!name) return alert("Task name cannot be empty");
+    const task = { name, date, time, list, completed: false, created: new Date() };
+    tasks.push(task);
+
+    document.getElementById('taskName').value='';
+    document.getElementById('taskDate').value='';
+    document.getElementById('taskTime').value='';
+    renderTasks();
+}
+
+function renderTasks() {
+    const ul = document.getElementById('tasksList');
+    ul.innerHTML='';
+    tasks.forEach((task,index)=>{
+        const li=document.createElement('li');
+        li.className=task.completed?'completed':'';
+        li.innerHTML=`<span>${task.name} [${task.list}] ${task.date ? '- ' + task.date : ''} ${task.time ? task.time : ''}</span>
+        <div class="actions">
+            <button onclick="toggleComplete(${index})">${task.completed?'Undo':'Done'}</button>
+            <button onclick="editTask(${index})">Edit</button>
+            <button onclick="deleteTask(${index})">Delete</button>
+        </div>`;
+        ul.appendChild(li);
+    });
+}
+
+function toggleComplete(index){ tasks[index].completed=!tasks[index].completed; renderTasks(); }
+
+function deleteTask(index){ tasks.splice(index,1); renderTasks(); }
+
+function editTask(index){
+    const task=tasks[index];
+    const newName=prompt("Edit task name:",task.name); if(newName!==null) task.name=newName;
+    const newDate=prompt("Edit date (YYYY-MM-DD):",task.date); if(newDate!==null) task.date=newDate;
+    const newTime=prompt("Edit time (HH:MM):",task.time); if(newTime!==null) task.time=newTime;
+    const newList=prompt("Edit list:",task.list); if(newList!==null) task.list=newList;
+    renderTasks();
+}
+
+// Manage Lists
+function addNewList(){
+    const newList=document.getElementById('newListName').value.trim();
+    if(!newList) return alert("Enter a valid list name");
+    lists.push(newList);
+    document.getElementById('newListName').value='';
+    renderLists();
+}
+
+function renderLists(){
+    const ul=document.getElementById('listContainer');
+    ul.innerHTML='';
+    lists.forEach((list,index)=>{
+        const li=document.createElement('li');
+        li.innerHTML=`${list} <button onclick="deleteList(${index})">Delete</button>`;
+        ul.appendChild(li);
+    });
+    // Update task dropdown
+    const select=document.getElementById('taskList');
+    select.innerHTML='';
+    lists.forEach(l=>select.innerHTML+=`<option value="${l}">${l}</option>`);
+}
+
+function deleteList(index){
+    const listName=lists[index];
+    if(confirm(`Delete list "${listName}"? All tasks in it will remain.`)){
+        lists.splice(index,1);
+        renderLists();
+    }
+}
+
+// Statistics
+function updateStats(){
+    document.getElementById('totalTasks').innerText=tasks.length;
+    document.getElementById('completedTasks').innerText=tasks.filter(t=>t.completed).length;
+    const onTime=tasks.filter(t=>{
+        if(!t.date || !t.time) return false;
+        const taskDate=new Date(t.date+'T'+t.time);
+        return taskDate>=t.created;
+    }).length;
+    document.getElementById('onTimeTasks').innerText=onTime;
+}
+
+renderLists();
+renderTasks();
+</script>
+
+</body>
+</html>
